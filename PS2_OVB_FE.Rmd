@@ -42,11 +42,11 @@ Other packages you will need: `dplyr`, `stargazer` and `lfe`.
 Remember, if you have not used a package before you will need to install the package as follows
 
 Setting personal working directory
-```{r}
+```{r, include =FALSE}
 getwd()
 ```
 
-```{r packages}
+```{r packages, include=FALSE}
 
 install.packages('haven',repos = "http://cran.us.r-project.org")
 install.packages("dplyr",repos = "http://cran.us.r-project.org")
@@ -66,6 +66,8 @@ This .Rmd file will be opened on different computers. But you don't want to have
 
 Calling packages
 ```{r include=FALSE}
+install.packages("plm")
+library(plm)
 library(haven)
 library(dplyr)
 library(stargazer)
@@ -73,9 +75,9 @@ library(lfe)
 ```
 
 Loading data
-```{r}
-setwd("c:/Users/Kiersten/Documents/School/S2_Causal_Inf/PS2_Shea_Idowu_Koch_Stefanelli")
-basic.data <- read_dta("/Users/Kiersten/Documents/School/S2_Causal_Inf/PS2_Shea_Idowu_Koch_Stefanelli/Data/basic.dta")
+```{Question 1, include = TRUE}
+setwd("~/Library/Mobile Documents/com~apple~CloudDocs/PITT/ECON 2822 Economic Inference from Data/Assignment 2/PS2_Shea_Idowu_Koch_Stefanelli/Data")
+basic.data <- read_dta("~/Library/Mobile Documents/com~apple~CloudDocs/PITT/ECON 2822 Economic Inference from Data/Assignment 2/PS2_Shea_Idowu_Koch_Stefanelli/Data/basic.dta")
 View(basic.data)
 summary(basic.data)
 ```
@@ -87,7 +89,7 @@ summary(basic.data)
 
 **Code:**
 
-```{r}
+```{Queston 2, include =TRUE}
 congress105_data <- filter(basic.data, congress == "105")
 View(congress105_data)
 ```
@@ -122,7 +124,7 @@ View(congress105_data)
 
 **Code:**
 
-```{r}
+```{Question 3, include = TRUE}
 data.final <- select(congress105_data, aauw, totchi, ngirls, party, female, white, srvlng, age, demvote, medinc, perf, perw, perhs, percol, perur, moredef, statabb, district, rgroup, region)
 View(data.final)
 ```
@@ -131,8 +133,9 @@ View(data.final)
 ## Question 4: Make sure your final dataset is a data frame. You can check your data's format with the command `is`. If the first element of the returned vector is not "data.frame", convert your dataset with the function `as.data.frame`. 
 
 **Code:**
-```{r}
+```{Queston 4, include = TRUE}
 is(data.final)
+data.final <- as.data.frame(data.final)
 ```
 
 
@@ -146,7 +149,7 @@ Hints: If you want RMarkdown to display your outputted table, include the code `
 
 ```{r results='asis'}
 library(stargazer)
-stargazer(data.final, summary = TRUE, results="html")
+stargazer(data.final, summary = TRUE, results="latex")
 ```
 
 
@@ -156,7 +159,7 @@ stargazer(data.final, summary = TRUE, results="html")
 
 **Code:**
 
-```{r}
+```{Question 6, include = TRUE}
 as.factor(data.final$party)
 data.final$repub_i <- ifelse(data.final$party == '2', 1, 0)
 data.final$dem_i <- ifelse(data.final$party == '1', 1, 0)
@@ -179,13 +182,13 @@ $$
 
 **Code:**
 
-```{r}
+```{Question 7, include = TRUE}
 r1 <- felm(data=data.final, aauw ~ ngirls)
 r2 <- felm(data=data.final, aauw ~ ngirls + totchi)
 r3 <- felm(data=data.final, aauw ~ ngirls + totchi + female + repub_i)
 ```
 
-```{r}
+```{r, results="asis}
 stargazer(r1, r2, r3, type="text", header=FALSE, title="Comparison of Regressions", 
                      style="qje", 
                      se = list(r1$rse, r2$rse, r3$rse),
@@ -197,7 +200,10 @@ stargazer(r1, r2, r3, type="text", header=FALSE, title="Comparison of Regression
 ## Question 8: Compare the OLS estimates of $\beta_1$ across the above three specifications. Discuss what explains the difference (if any) of the estimate across three specifications? Which control variable is particularly important and why?
 
 **Answer and Code:**
-
+```{Question 8, include = TRUE}
+cat(r1$coefficients[2], r2$coefficients[2], r3$coefficients[2])
+```
+The Estimates vary because they are heavily influenced by the total number of children. The number of children variable is heavily related to the number of daughters.
 
 
 
@@ -205,6 +211,7 @@ stargazer(r1, r2, r3, type="text", header=FALSE, title="Comparison of Regression
 
 **Answer:**
 
+The number of daughters is possibly exogenous; there may be  factors influencing the number of daughters. The underlying assumption is that biologically, gender is random and thus causal estimates can be determined. 
 
 
 ## Question 10: It is possible that the effects of having daughters might be different for female and male legislators. Estimate four different models to think about this question: the equivalent of model 3 separately on men and women, model 3 with a single interaction term added, and model 3 with three interaction terms added. Present your results in a table. Is there evidence that the effect of a daughter differs for male and female legislators? Of the four models you estimated, which are equivalent, which are different, and why? 
@@ -212,7 +219,7 @@ stargazer(r1, r2, r3, type="text", header=FALSE, title="Comparison of Regression
 
 **Code and Answer:**
 
-```{r}
+```{Question 10, include = TRUE}
 #model 3 separately on men and women
 data.final.f <- filter(data.final, female == "1")
 data.final.m <- filter(data.final, female == "0")
@@ -226,15 +233,14 @@ r_1int <- felm(data=data.final, aauw ~ ngirls + totchi + repub_i + female + ngir
 
 
 #model 3 with three interaction terms added. 
-r_3int <- felm(data=data.final, aauw ~ ngirls + totchi + repub_i + female + ngirls*female + ngirls*totchi + ngirls*repub_i)
-
+r_2int <- felm(data=data.final, aauw ~ ngirls + totchi + repub_i + female + ngirls*female+ngirls*repub)
 
 #model summaries
-stargazer(r_fem, r_mal, r_1int, r_3int, type="text", header=FALSE, title="Comparison of Regressions", 
+stargazer(r_fem, r_mal, r_1int, type="text", header=FALSE, title="Comparison of Regressions", 
                      style="qje", 
-                     se = list(r_fem$rse, r_mal$rse, r_1int$rse, r_3int$rse),
-                     column.labels = c("Model #4", "Model #5", "Model #6", "Model #7"),
-                     covariate.labels = c("# of Daughters", "# of Children", "Republican", "Female Congress Person", "# Girls*Female Congress Person", "# Girls*# of Children", "# of Girls*Republican"))
+                     se = list(r_fem$rse, r_mal$rse, r_1int$rse),
+                     column.labels = c("Model #4", "Model #5", "Model #6"),
+                     covariate.labels = c("# of Daughters", "# of Children", "Republican", "Female Congress Person", "# Girls::Female Congress Person", "Intercept"))
 
 ```
 
@@ -254,7 +260,7 @@ $$
 
 Hint: you will need to generate the dummy variables for the second equation or code it as `factor()`. For the third equation, the `felm` function allows you to specify fixed effects.
 
-```{r}
+```{dummy var, include = FALSE}
 # creating total children dummy variables
 library(fastDummies)
 as.factor(data.final$totchi)
@@ -262,19 +268,19 @@ data.final <- fastDummies::dummy_cols(data.final, select_columns = "totchi")
 ```
 
 
-```{r}
+```{Question 11, include = TRUE}
 #Model 1 listed for this question is R2 from previous question, will carry into this comparison instead
 
 #Model #7 (with dummies)
-r8 <- felm(data=data.final, aauw ~ ngirls + totchi_1 + totchi_2 + totchi_3 + totchi_4 + totchi_5 + totchi_6 + totchi_7 + totchi_9 + totchi_10)
+r7 <- felm(data=data.final, aauw ~ ngirls + totchi_1 + totchi_2 + totchi_3 + totchi_4 + totchi_5 + totchi_6 + totchi_7 + totchi_9 + totchi_10)
 
 #Model #8 (year fixed effect)
 data.final_fe <- select(congress105_data, aauw, year, totchi, ngirls, party, female, white, srvlng, age, demvote, medinc, perf, perw, perhs, percol, perur, moredef, statabb, district, rgroup, region)
 View(data.final_fe)
-r9 <- felm(data=data.final_fe, aauw ~ ngirls|year)
+r8 <- felm(data=data.final_fe, aauw ~ ngirls|year)
 
 #Model summaries
-stargazer(r2, r8, r9, type="text", header=FALSE, title="Comparison of Regressions", 
+stargazer(r2, r7, r8, type="text", header=FALSE, title="Comparison of Regressions", 
                      style="qje", 
                      se = list(r2$rse, r7$rse, r8$rse),
                      column.labels = c("Model #2", "Model #7", "Model #8"),
@@ -291,51 +297,37 @@ stargazer(r2, r8, r9, type="text", header=FALSE, title="Comparison of Regression
 ## Question 12: Reproduce the results in column 2 of table 2 from Washington's paper. 
 
 **Code:**
-Create variables:
-```{r}
-#Age Squared
-data.final$agesqrd <- (data.final$age)^2
-
-#Service Squared
-data.final$srvlngsqrd <- (data.final$srvlng)^2
-
-#Religion Dummies
-as.factor(data.final$rgroup)
-data.final <- fastDummies::dummy_cols(data.final, select_columns = "rgroup")
-
-rename(data.final, rel.none = rgroup_0, rel.prot = rgroup_1, rel.cath_orth = rgroup_2, rel.othchris = rgroup_3, rel.jew = rgroup_4)
-
-data.final <- rename(data.final, rel.none = rgroup_0, rel.prot = rgroup_1, rel.cath_orth = rgroup_2, rel.othchris = rgroup_3, rel.jew = rgroup_4)
-
-#Region Dummies
-as.factor(data.final$region)
-data.final <- fastDummies::dummy_cols(data.final, select_columns = "region")
-
-
-```
-
 Reproducing the following regression: 
 
 AAUW = ngirls + female + white + republican + age + agesqrd + servicelength + servicelengthsqrd + noreligion + Catholic + OtherChristian + Otherrel + DemVoteShare 
+```{Question 12, include = TRUE}
+as.factor(data.final_fe$rgroup)
+data.final_fe <- fastDummies::dummy_cols(data.final_fe, select_columns = "rgroup")
+data.final_fe$repub_i <- ifelse(data.final$party == '2', 1, 0)
 
-FOR TEAM:I get the right coefficients but added all the dummy vars for region (when we should exclude one), not sure what's going on
+age_squared <- (data.final_fe$age)^2
+data.final_fe$age_squared <- age_squared
 
-```{r}
-r10 <- felm(data=data.final, aauw ~ ngirls + female + white + repub_i + age + agesqrd + srvlng + srvlngsqrd + rel.none + rel.cath_orth + rel.othchris + rel.jew + demvote + totchi_0 + totchi_1 + totchi_2 + totchi_3 + totchi_4 + totchi_5 + totchi_6 + totchi_7 + totchi_9 + totchi_10 + region_1 + region_2 + region_3 + region_4 + region_5 + region_6 + region_7 + region_8 + region_9)
+srvlng_squared <- (data.final_fe$srvlng)^2
+data.final_fe$srvlng_squared <- srvlng_squared
 
-stargazer(r10, type="text", header=FALSE, title="Impact of Female Children on Legislator Voting on Women's Issues", 
+r9 <- felm(data=data.final_fe, aauw ~ ngirls+female+white+repub_i+age+age_squared+srvlng+srvlng_squared+rgroup_0+rgroup_2+rgroup_3+rgroup_4+demvote|totchi+region)
+
+stargazer(r9, type="text", header=FALSE, title="Regression 9", 
                      style="qje", 
-                     se = list(r10$rse),
-                     omit = c("totchi_0","totchi_1", "totchi_2", "totchi_3", "totchi_4", "totchi_5", "totchi_6", "totchi_7", "totchi_9", "totchi_10", "region_1", "region_2", "region_3", "region_4", "region_5", "region_6", "region_7", "region_8", "region_9", "Constant"))
+                     se = r9$coefficients,
+                     column.labels = c("Model #9"),
+                     covariate.labels = c("# of Daughters", "Female", "White", "Republican", "Age", "Age Squared", "Service length", "Service Length Squared", "No religon", "Catholic", "Other Christian", "Other Religion", "Democratic vote share", "Intercept"))
+
 
 ```
+
 
 
 ## Question 13: Explain what the region fixed effects are controlling for?
 
 **Answer:** 
-The region fixed effects are controlling for variation
-
+Region fixed effects controls for political tendencies in different areas
 
 
 ## Question 14: Reload the data and this time we will keep observations from all of the congresses. Generate a variable that creates a unique identifier for region by year. Estimate the following models and present your results in a table.
@@ -350,23 +342,54 @@ $$
 \end{aligned}
 $$
 
+
 **$\gamma_i$ is a fixed effect for the total number of children, $\phi_i$ is a region fixed effect, $\eta_i$ is a year (congress session) fixed effect and $\theta_i$ is a region by year fixed effect and $\rho_i$ is a total children by region by year fixed effect. Explain what the differences between these four different estimation. Is there a downside to a specification like the fourth specification? **
 
 **Code and Answer:**
+
+```{Question 14, include= TRUE}
+data <- read_dta("~/Library/Mobile Documents/com~apple~CloudDocs/PITT/ECON 2822 Economic Inference from Data/Assignment 2/PS2_Shea_Idowu_Koch_Stefanelli/Data/basic.dta")
+
+#Interaction Variables
+as.factor(data$region)
+as.factor(data$congress)
+
+as.factor(data$year)
+as.factor(data$region)
+
+
+data <- fastDummies::dummy_cols(data, select_columns = "rgroup")
+
+
+r10 <- felm(data=data, aauw ~ ngirls|totchi+region)
+r11 <- felm(data=data, aauw ~ ngirls|totchi+region+year)
+r12 <- felm(data=data, aauw ~ ngirls|(totchi+(region~year)))
+r13 <- felm(data=data, aauw ~ ngirls|(totchi~region~year))
+
+
+stargazer(r10,r11,r12,r13, type="text", header=FALSE, title="Comparison of Regressions 10-13", 
+                     style="qje", 
+                     se = list(r10$coefficients,r11$coefficients,r12$coefficients,r13$coefficients),
+                     column.labels = c("Model #10","Model #11","Model #12","Model #13"),
+                     covariate.labels = c("# of Daughters", "Intercept"))
+
+
+```
 
 
 
 ## Question 15: In her paper, Washington chooses not to pool the data for all four congresses and instead estimates her main specification on each year separately. Why do you think she makes this choice? 
 
 **Answer:** 
-
+She accounts for variation in time by separately analyzing congresses. Different time periods may experience varying exogenous influence. 
 
 ## Question 16: Check to see that names uniquely identify each congress person. If you are not sure if they do, make a unique identifier for each congress person.
 
 
 **Answer and Code:**
-
-
+```{Question 16, include = TRUE}
+data$name <- as.factor(data$name)
+```
 
 
 ## Question 17:Because we have data for four congress sessions, we may be able to see how an individual congress person's voting patterns change as the number of daughters they have changes. Propose an estimating equation that would allow you to estimate this, run your estimation and present your results. Be sure to define all new variables. What do your results tell you? Why?
@@ -374,30 +397,82 @@ $$
 
 **Answer and Code:**
 
+$$
+\begin{aligned}
+    aauw_i&=\beta_0+\beta_1ngirls_i+\beta_2Female+\beta_3Republican+\gamma_iTotal Children+\phi_iRegion+\epsilon_iAge\\
+\end{aligned}
+$$
+
+```{Question 17, include = TRUE}
+
+data_105 <- filter(basic.data, congress == "105")
+data_106 <- filter(basic.data, congress == "106")
+data_107 <- filter(basic.data, congress == "107")
+data_108 <- filter(basic.data, congress == "108")
+
+r14 <- felm(data=data, aauw ~ ngirls+repub|totchi+region+age+name+congress)
+
+r14 <- felm(data=data_105, aauw ~ ngirls+female+repub|totchi+region+age)
+r15 <- felm(data=data_106, aauw ~ ngirls+female+repub|totchi+region+age)
+r16 <- felm(data=data_107, aauw ~ ngirls+female+repub|totchi+region+age)
+r17 <- felm(data=data_108, aauw ~ ngirls+female+repub|totchi+region+age)
+
+stargazer(r14,r15,r16,r17, type="text", header=FALSE, title="Comparison of Regressions 14-17", 
+                     style="qje", 
+                     se = list(r14$rse,r15$rse,r16$rse,r17$rse),
+                     column.labels = c("105 Congress","106 Congress","107 Congress","108 Congress"),
+                     covariate.labels = c("# of Daughters", "Female", "Republican", "Intercept"))
+
+summary(r14)
+
+```
 
 
 
 ## Question 18: Can you think of any identification concerns with this approach?
 
 **Answer:** 
+Observing changes for each congress person removes conditionality and may lead to exogenous variation
 
 
 ## Question 19: Using data from all four congresses, estimate the same specification as that used in column 2 of table 2 with the addition of year and individual fixed effects and report your results. Why aren't you able to estimate a coefficient for certain covariates?
 
 **Code:**
+```{Question 19, include = TRUE}
+as.factor(data$rgroup)
+data <- fastDummies::dummy_cols(data, select_columns = "rgroup")
+
+age_squared <- (data$age)^2
+data$age_squared <- age_squared
+
+srvlng_squared <- (data$srvlng)^2
+data$srvlng_squared <- srvlng_squared
+
+r18 <- felm(data=data, aauw ~ ngirls+female+white+repub+age+age_squared+srvlng+srvlng_squared+rgroup_0+rgroup_2+rgroup_3+rgroup_4+demvote|totchi+region+year+name)
+
+stargazer(r18, type="text", header=FALSE, title="Regression 18", 
+                     style="qje", 
+                     se = r18$rse,
+                     column.labels = c("Model #9"),
+                     covariate.labels = c("# of Daughters", "Female", "White", "Republican", "Age", "Age Squared", "Service length", "Service Length Squared", "No religon", "Catholic", "Other Christian", "Other Religion", "Democratic vote share", "Intercept"))
+
+```
 
 
 **Answer:** 
-
+R cannot calculate coefficient estimates because the individual fixed effects remove variation from the model. 
 
 ## Question 20: Which fixed effects from the original specification are now redundant?
 
 **Answer:**
+Region and year fixed effects are redundant when adding name fixed effects
 
 
 ## Question 21: Can you estimate a coefficient for $Repub$? What does this imply?
 
 **Answer:**
+
+Yes ( -3.034). This means that political party is not heavily related to names
 
 
 # Submission instructions:
